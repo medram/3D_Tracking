@@ -3,12 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@mediapipe/camera_utils": "^0.1.1606863050",
+    "@mediapipe/control_utils": "^0.1.1606863011",
+    "@mediapipe/drawing_utils": "^0.2.1614797616",
+    "@mediapipe/pose": "^0.2.1614787780",
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.5",
     "@testing-library/user-event": "^12.8.1",
+    "onigasm": "^2.2.5",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
+    "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.3",
+    "three": "^0.126.1",
     "web-vitals": "^1.1.0"
   },
   "scripts": {
@@ -34,5 +41,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "react-app-rewired": "^2.1.8",
+    "wasm-loader": "^1.3.0"
   }
 }
