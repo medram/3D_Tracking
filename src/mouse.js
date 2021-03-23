@@ -1,10 +1,12 @@
 import * as THREE from 'three'
 
 export default class Mouse {
-    constructor() {
+    constructor(selector = document) {
         this.vector = new THREE.Vector2()
         this._x = 0
         this._y = 0
+        this._selector = selector
+
         this._time = 0
         this._delta = 0
         this._fps = 60
@@ -13,12 +15,19 @@ export default class Mouse {
 
     _init() {
         this._time = new Date().getTime()
-        document.onmousemove = (e) => {
-            this.delta = new Date().getTime() - this._time
-            if (this.delta > 1000 / this._fps)
+        this._selector.onmousemove = (e) => {
+            this._requestAnimationFrame(() => {
                 this._update(e.clientX, e.clientY)
                 //this._update(e.pageX, e.pageY)
+            })
         }
+    }
+
+    _requestAnimationFrame(callback)
+    {
+        this._delta = new Date().getTime() - this._time
+        if (this._delta > 1000 / this._fps)
+            callback()
     }
 
     _update(x, y)

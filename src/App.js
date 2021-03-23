@@ -13,12 +13,14 @@ import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils/drawing_
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Mouse from './mouse'
+import { PrintInAnimation } from './utils'
 
 
 
 const WIDTH = 640   // in px
 const HEIGHT = 480  // in px
 const MOUSE = new Mouse()
+const Print = new PrintInAnimation(1)
 
 let LANDMARKS = []
 /*
@@ -60,6 +62,8 @@ class Render3D extends React.Component
         this.camera = null
         this.renderer = null
         this.model = null
+        this.mouse = null
+        this.canvas = null
 
         this.animate = this.animate.bind(this)
     }
@@ -75,6 +79,15 @@ class Render3D extends React.Component
 
         // appending Three DOM element.
         this.mount.appendChild(this.renderer.domElement)
+        this.canvas = this.mount.children[0]
+
+        // get mouse sceen positions (-1, +1)
+        /*this.mouse = new THREE.Vector3(
+            this.canvas.offsetWidth / (MOUSE._x - this.canvas.offsetLeft) * 2 - 1,
+            this.canvas.offsetHeight / (MOUSE._y - this.canvas.offsetTop) * -2 + 1,
+            -1
+        ).unproject(this.camera)*/
+
 
         // loading modules
         let loader = new GLTFLoader()
@@ -113,13 +126,18 @@ class Render3D extends React.Component
 
     animate()
     {
-        // mouse position in the 3d world.
-        let Mouse3D = MOUSE.vector
+        // get mouse sceen positions (-1, +1)
+        this.mouse = new THREE.Vector3(
+            (MOUSE._x - this.canvas.offsetLeft) / this.canvas.offsetWidth * 2 - 1,
+            -(MOUSE._y - this.canvas.offsetTop) / this.canvas.offsetHeight * 2 + 1,
+            0
+        ).unproject(this.camera).sub(this.camera.position)
 
+        //Print.try(this.mouse)
 
-        this.model.scene.position.x = Mouse3D.x
-        this.model.scene.position.y = Mouse3D.y
-        //this.model.scene.position.z = Mouse3D.z
+        this.model.scene.position.x = this.mouse.x
+        this.model.scene.position.y = this.mouse.y
+        //this.model.scene.position.z = this.mouse.z
 
         for (let [key, value] of this.model.parser.associations) {
             /*
@@ -229,6 +247,7 @@ class App extends React.Component
         //results.poseLandmarks[11]
         //results.poseLandmarks[13]
         //results.poseLandmarks[15]
+        Print.try(results.poseLandmarks[15])
 
         // render landmarks
         this.renderLandmarks(results)
