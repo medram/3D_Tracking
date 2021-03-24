@@ -13,7 +13,7 @@ import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils/drawing_
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Mouse from './mouse'
-import { PrintInAnimation } from './utils'
+import { Circle, PrintInAnimation } from './utils'
 
 
 
@@ -65,6 +65,8 @@ class Render3D extends React.Component
         this.mouse = null
         this.canvas = null
 
+        this.circles = new Array(33).fill(0).map(() => new Circle())
+
         this.animate = this.animate.bind(this)
     }
 
@@ -93,8 +95,8 @@ class Render3D extends React.Component
         let loader = new GLTFLoader()
         loader.load('assets/3d/fire_fighter/scene.gltf', gltf => {
             this.model = gltf
-            this.scene.add(gltf.scene)
-            console.log(gltf.parser)
+            //this.scene.add(gltf.scene)
+            console.log(gltf)
             // Shoulderl_010 & Arml_011
             for (let [key, value] of gltf.parser.associations)
             {
@@ -113,55 +115,74 @@ class Render3D extends React.Component
         let cube = new THREE.Mesh(geometry, material);
         this.scene.add(cube)
         */
+       // adding the all circles to the scene
+        this.circles.forEach(circle => {
+            this.scene.add(circle)
+        })
 
         // adding some lighting
         const light = new THREE.AmbientLight(0xEEEEEE)
         this.scene.add(light)
 
+        // adding Axes to the scene
+        const axesHelper = new THREE.AxesHelper(5)
+        this.scene.add(axesHelper)
+
         // Start the animation loop (all 3d models should be loaded before.)
-        this.camera.position.z = 3
-        this.camera.position.y = 0
+        this.camera.position.x = 2
+        this.camera.position.y = 1
+        this.camera.position.z = 2
         //this.animate()
     }
 
     animate()
     {
         // get mouse sceen positions (-1, +1)
+        /*
         this.mouse = new THREE.Vector3(
             (MOUSE._x - this.canvas.offsetLeft) / this.canvas.offsetWidth * 2 - 1,
             -(MOUSE._y - this.canvas.offsetTop) / this.canvas.offsetHeight * 2 + 1,
-            0
-        ).unproject(this.camera).sub(this.camera.position)
+            0.5
+        ).unproject(this.camera)
 
-        //Print.try(this.mouse)
+        Print.try(this.mouse)
+        */
 
-        this.model.scene.position.x = this.mouse.x
-        this.model.scene.position.y = this.mouse.y
+        //this.model.scene.position.x = this.mouse.x
+        //this.model.scene.position.y = this.mouse.y
         //this.model.scene.position.z = this.mouse.z
 
-        for (let [key, value] of this.model.parser.associations) {
-            /*
-            if (key.type === 'Bone' && key.name === 'Arml_011') {
-                key.rotation.z += 0.01
-            }
-            */
-            if (key.type === 'Bone' && key.name === 'ForeArml_012') {
 
-                try {
-                    //let pose = LANDMARKS.poseLandmarks[13]
-                    // Vector3 {x: 1.8917489796876907e-10, y: 0.1924258917570114, z: -5.961614846228258e-8}
-                    //console.log(MOUSE)
+        if (LANDMARKS.poseLandmarks)
+        {
+            LANDMARKS.poseLandmarks.forEach((pose, i) => {
+                let v = new THREE.Vector3(pose.x, pose.y, pose.z)
 
+                // convert to the sceen space
+                v.x = v.x * 2 - 1
+                v.y = -v.y * 2 + 1
+                v.z = 0.5
 
-                    //key.position.x = v.x
-                    //key.position.y = v.y
-                    //key.position.z = v.y
-                } catch (error) {
-                    //console.log('poseLandmarks[15] Not found')
-                }
-            }
+                // convert to 3D world
+                v.unproject(this.camera)
+                //this.model.scene.worldToLocal(v)
+                // Print.try(this.circles.length)
+                // appending circles positions
+                this.circles[i].position.copy(new THREE.Vector3(v.x, v.y, v.z))
+            })
         }
 
+
+
+
+        // Head_05 & Shoulderr_029 & Shoulderl_010
+        /*
+        for (let [key, value] of this.model.parser.associations) {
+            if (key.type === 'Bone' && (key.name === 'Head_05' || key.name === 'Shoulderl_010' || key.name === 'Shoulderr_029' )) {
+            }
+
+        }
+        */
 
         //this.model.scene.rotation.y += 0.01
         //console.log(this.model.scene.position.z)
@@ -247,7 +268,7 @@ class App extends React.Component
         //results.poseLandmarks[11]
         //results.poseLandmarks[13]
         //results.poseLandmarks[15]
-        Print.try(results.poseLandmarks[15])
+        //Print.try(results.poseLandmarks[15])
 
         // render landmarks
         this.renderLandmarks(results)
