@@ -14,6 +14,7 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Mouse from './mouse'
 import { Circle, PrintInAnimation } from './utils'
+import Skeleton from './skeleten'
 
 
 
@@ -66,6 +67,8 @@ class Render3D extends React.Component
         this.canvas = null
 
         this.circles = new Array(33).fill(0).map(() => new Circle())
+        this.skeleton = null
+
 
         this.animate = this.animate.bind(this)
     }
@@ -114,11 +117,20 @@ class Render3D extends React.Component
         let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         let cube = new THREE.Mesh(geometry, material);
         this.scene.add(cube)
+
+        // adding the all circles to the scene
+         this.circles.forEach(circle => {
+             this.scene.add(circle)
+         })
         */
-       // adding the all circles to the scene
-        this.circles.forEach(circle => {
-            this.scene.add(circle)
-        })
+
+        // create a 3D object (it should be here)
+        console.log('Creating a Skeleton')
+        this.skeleton = new Skeleton(LANDMARKS.poseLandmarks)
+        this.skeleton.model.translateX(0.5)
+        this.skeleton.model.translateZ(0.5)
+        this.scene.add(this.skeleton.model)
+
 
         // adding some lighting
         const light = new THREE.AmbientLight(0xEEEEEE)
@@ -129,9 +141,9 @@ class Render3D extends React.Component
         this.scene.add(axesHelper)
 
         // Start the animation loop (all 3d models should be loaded before.)
-        this.camera.position.x = 2
-        this.camera.position.y = 1
-        this.camera.position.z = 2
+        this.camera.position.x = 0.3
+        this.camera.position.y = 0.3
+        this.camera.position.z = 5
         //this.animate()
     }
 
@@ -155,22 +167,13 @@ class Render3D extends React.Component
 
         if (LANDMARKS.poseLandmarks)
         {
-            LANDMARKS.poseLandmarks.forEach((pose, i) => {
-                let v = new THREE.Vector3(pose.x, pose.y, pose.z)
+            // just update the skeleton coordinates
+            this.skeleton.update(LANDMARKS.poseLandmarks)
 
-                // convert to the sceen space
-                v.x = v.x * 2 - 1
-                v.y = -v.y * 2 + 1
-                v.z = 0.5
-
-                // convert to 3D world
-                v.unproject(this.camera)
-                //this.model.scene.worldToLocal(v)
-                // Print.try(this.circles.length)
-                // appending circles positions
-                this.circles[i].position.copy(new THREE.Vector3(v.x, v.y, v.z))
-            })
+            this.skeleton.model.position.copy(LANDMARKS.poseLandmarks[0])
+            //this.skeleton.model.rotation.y += 0.05
         }
+
 
 
 
