@@ -15,7 +15,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Mouse from './mouse'
 import { Circle, PrintInAnimation } from './utils'
 import Skeleton from './skeleten'
-
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 
 const WIDTH = 640   // in px
@@ -65,6 +65,7 @@ class Render3D extends React.Component
         this.model = null
         this.mouse = null
         this.canvas = null
+        this.controls = null
 
         this.circles = new Array(33).fill(0).map(() => new Circle())
         this.skeleton = null
@@ -85,6 +86,9 @@ class Render3D extends React.Component
         // appending Three DOM element.
         this.mount.appendChild(this.renderer.domElement)
         this.canvas = this.mount.children[0]
+
+        // adding controls
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement)
 
         // get mouse sceen positions (-1, +1)
         /*this.mouse = new THREE.Vector3(
@@ -139,6 +143,10 @@ class Render3D extends React.Component
         // adding Axes to the scene
         const axesHelper = new THREE.AxesHelper(5)
         this.scene.add(axesHelper)
+
+        // adding a grid helper
+        const gridHelper = new THREE.GridHelper(100, 10)
+        this.scene.add(gridHelper)
 
         // Start the animation loop (all 3d models should be loaded before.)
         this.camera.position.x = 0.3

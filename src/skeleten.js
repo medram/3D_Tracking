@@ -63,6 +63,10 @@ export default class Skeleton
             this.model.add(this._generateRightArm())
             this.model.add(this._generateLeftLeg())
             this.model.add(this._generateRightLeg())
+            this.model.add(this._generateRightFoot())
+            this.model.add(this._generateLeftFoot())
+            this.model.add(this._generateRightHand())
+            this.model.add(this._generateLeftHand())
 
             this._worldToLoacal()
             this._skeletonGenerated = true
@@ -154,6 +158,64 @@ export default class Skeleton
         return head
     }
 
+    _generateRightFoot() {
+        let material = new THREE.LineBasicMaterial({ color: this.color })
+        let geometry = new THREE.BufferGeometry().setFromPoints([
+            this._landmarks[28],
+            this._landmarks[30],
+            this._landmarks[32],
+            this._landmarks[28]
+        ])
+
+        let mesh = new THREE.Line(geometry, material)
+        mesh.name = 'RightFoot'
+        return mesh
+    }
+
+    _generateLeftFoot() {
+        let material = new THREE.LineBasicMaterial({ color: this.color })
+        let geometry = new THREE.BufferGeometry().setFromPoints([
+            this._landmarks[27],
+            this._landmarks[31],
+            this._landmarks[29],
+            this._landmarks[27]
+        ])
+
+        let mesh = new THREE.Line(geometry, material)
+        mesh.name = 'LeftFoot'
+        return mesh
+    }
+
+    _generateRightHand() {
+        let material = new THREE.LineBasicMaterial({ color: this.color })
+        let geometry = new THREE.BufferGeometry().setFromPoints([
+            this._landmarks[16],
+            this._landmarks[22],
+            this._landmarks[20],
+            this._landmarks[18],
+            this._landmarks[16]
+        ])
+
+        let mesh = new THREE.Line(geometry, material)
+        mesh.name = 'RightHand'
+        return mesh
+    }
+
+    _generateLeftHand() {
+        let material = new THREE.LineBasicMaterial({ color: this.color })
+        let geometry = new THREE.BufferGeometry().setFromPoints([
+            this._landmarks[15],
+            this._landmarks[21],
+            this._landmarks[19],
+            this._landmarks[17],
+            this._landmarks[15]
+        ])
+
+        let mesh = new THREE.Line(geometry, material)
+        mesh.name = 'LeftHand'
+        return mesh
+    }
+
     getModel()
     {
         return this.model
@@ -212,6 +274,40 @@ export default class Skeleton
                     this._landmarks[24],
                     this._landmarks[26],
                     this._landmarks[28]
+                ])
+            }
+            else if (bodyPart.name === 'RightFoot') {
+                bodyPart.geometry.setFromPoints([
+                    this._landmarks[28],
+                    this._landmarks[30],
+                    this._landmarks[32],
+                    this._landmarks[28]
+                ])
+            }
+            else if (bodyPart.name === 'LeftFoot') {
+                bodyPart.geometry.setFromPoints([
+                    this._landmarks[27],
+                    this._landmarks[31],
+                    this._landmarks[29],
+                    this._landmarks[27]
+                ])
+            }
+            else if (bodyPart.name === 'RightHand') {
+                bodyPart.geometry.setFromPoints([
+                    this._landmarks[16],
+                    this._landmarks[22],
+                    this._landmarks[20],
+                    this._landmarks[18],
+                    this._landmarks[16]
+                ])
+            }
+            else if (bodyPart.name === 'LeftHand') {
+                bodyPart.geometry.setFromPoints([
+                    this._landmarks[15],
+                    this._landmarks[21],
+                    this._landmarks[19],
+                    this._landmarks[17],
+                    this._landmarks[15]
                 ])
             }
         })
