@@ -13,7 +13,7 @@ import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils/drawing_
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Mouse from './mouse'
-import { Circle, PrintInAnimation } from './utils'
+import { Circle, Print } from './utils'
 import Skeleton from './skeleten'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
@@ -21,7 +21,6 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 const WIDTH = 640   // in px
 const HEIGHT = 480  // in px
 const MOUSE = new Mouse()
-const Print = new PrintInAnimation(1)
 
 let LANDMARKS = []
 /*
@@ -102,8 +101,12 @@ class Render3D extends React.Component
         let loader = new GLTFLoader()
         loader.load('assets/3d/fire_fighter/scene.gltf', gltf => {
             this.model = gltf
-            //this.scene.add(gltf.scene)
-            console.log(gltf)
+
+            // adding Axes to the scene
+            this.model.scene.add(new THREE.AxesHelper(1))
+
+            this.scene.add(this.model.scene)
+            console.log(this.model)
             // Shoulderl_010 & Arml_011
             for (let [key, value] of gltf.parser.associations)
             {
@@ -131,8 +134,9 @@ class Render3D extends React.Component
         // create a 3D object (it should be here)
         console.log('Creating a Skeleton')
         this.skeleton = new Skeleton(LANDMARKS.poseLandmarks)
-        this.skeleton.model.translateX(0.5)
-        this.skeleton.model.translateZ(0.5)
+        this.skeleton.model.translateX(1)
+        this.skeleton.model.translateZ(1)
+        //this.skeleton.model.position.y = 0
         this.scene.add(this.skeleton.model)
 
 
@@ -168,7 +172,7 @@ class Render3D extends React.Component
         Print.try(this.mouse)
         */
 
-        //this.model.scene.position.x = this.mouse.x
+        //this.model.scene.position.x += 0.01
         //this.model.scene.position.y = this.mouse.y
         //this.model.scene.position.z = this.mouse.z
 
@@ -178,8 +182,11 @@ class Render3D extends React.Component
             // just update the skeleton coordinates
             this.skeleton.update(LANDMARKS.poseLandmarks)
 
-            this.skeleton.model.position.copy(LANDMARKS.poseLandmarks[0])
+            //this.skeleton.model.position.copy(LANDMARKS.poseLandmarks[0])
             //this.skeleton.model.rotation.y += 0.05
+            //this.skeleton.model.position.x += 0.01
+            this.skeleton.model.scale.set(1.5, 1.5, 1.5)
+
         }
 
 

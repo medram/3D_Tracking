@@ -20,6 +20,7 @@ export class PrintInAnimation {
     }
 }
 
+export const Print = new PrintInAnimation(1)
 
 export function Circle(radius = 0.01, segments = 10, color = 0xffff00)
 {

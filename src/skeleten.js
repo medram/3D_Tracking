@@ -1,5 +1,7 @@
 import * as THREE from 'three'
-import { Circle } from './utils'
+import { Circle, Print } from './utils'
+
+
 
 export default class Skeleton
 {
@@ -12,6 +14,9 @@ export default class Skeleton
         this._bodyParts = []
         this._skeletonGenerated = false
 
+        // these poses are used to get repere position.
+        this._poses = [15, 16, 23, 24, 25, 26, 29, 30]
+        this._reperePosition = new THREE.Vector3(0, 0, 0)
         this._init()
     }
 
@@ -44,13 +49,37 @@ export default class Skeleton
             v.z = 0
             */
 
+            /*
             // making the Head as a center of axes model
             v.x = v.x - this._tempLandmarks[0].x
             v.y = -(v.y - this._tempLandmarks[0].y)
             v.z = -(v.z - this._tempLandmarks[0].z)
+            */
+
+            v.x = v.x - this._reperePosition.x
+            v.y = -(v.y - this._reperePosition.y)
+            v.z = -(v.z - this._reperePosition.z)
+
+            // adding a translation to make our repere at (0, 0, 0)
+            /*
+            v.x = v.x - this._reperePosition.x
+            v.y = v.y - this._reperePosition.y
+            v.z = v.z - this._reperePosition.z
+            */
 
             this._landmarks.push(v)
         })
+    }
+
+    // calculate repere position.
+    _gererateReperePosition()
+    {
+        // we want ymin but the repere is up side down, so it's ymax
+        let ymax = Math.max(...this._poses.map(i => {
+            return this._tempLandmarks[i].y
+        }))
+        return this._reperePosition.set(this._tempLandmarks[0].x, ymax, this._tempLandmarks[0].z)
+        //return this.model.position.set(this._tempLandmarks[0].x, ymax, this._tempLandmarks[0].z)
     }
 
     _generateSkeleten()
@@ -226,9 +255,14 @@ export default class Skeleton
         if (!this._skeletonGenerated)
             this._generateSkeleten()
 
-        // convert coordinates to local space
         this._tempLandmarks = tempLandmarks
+
+        // calculate repere position.
+        this._gererateReperePosition()
+
+        // convert coordinates to local space
         this._convertToLocalSpace()
+
 
         // Updating body parts models
         this.model.children.forEach(bodyPart => {
