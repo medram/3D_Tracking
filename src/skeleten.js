@@ -71,6 +71,11 @@ export default class Skeleton
         })
     }
 
+    getConvertedLandmarks()
+    {
+        return this._landmarks
+    }
+
     // calculate repere position.
     _gererateReperePosition()
     {

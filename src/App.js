@@ -104,8 +104,12 @@ class Render3D extends React.Component
 
             // adding Axes to the scene
             this.model.scene.add(new THREE.AxesHelper(1))
-
+            // adding model to the sceen
             this.scene.add(this.model.scene)
+            // adding a skeleton helper
+            this.scene.add(new THREE.SkeletonHelper(this.model.scene))
+
+
             console.log(this.model)
             // Shoulderl_010 & Arml_011
             for (let [key, value] of gltf.parser.associations)
@@ -136,9 +140,8 @@ class Render3D extends React.Component
         this.skeleton = new Skeleton(LANDMARKS.poseLandmarks)
         this.skeleton.model.translateX(1)
         this.skeleton.model.translateZ(1)
-        //this.skeleton.model.position.y = 0
+        this.skeleton.model.scale.set(1.5, 1.5, 1.5)
         this.scene.add(this.skeleton.model)
-
 
         // adding some lighting
         const light = new THREE.AmbientLight(0xEEEEEE)
@@ -181,26 +184,66 @@ class Render3D extends React.Component
         {
             // just update the skeleton coordinates
             this.skeleton.update(LANDMARKS.poseLandmarks)
+            const convertedLandmarks = this.skeleton.getConvertedLandmarks()
 
             //this.skeleton.model.position.copy(LANDMARKS.poseLandmarks[0])
             //this.skeleton.model.rotation.y += 0.05
             //this.skeleton.model.position.x += 0.01
-            this.skeleton.model.scale.set(1.5, 1.5, 1.5)
+
+
 
         }
 
-
-
+        this.scene.traverse((child) => {
+            //Print.try(child)
+            if (child instanceof THREE.SkinnedMesh)
+            {
+                //Print.try(child)
+                //child.skeleton.bones[6].position.y += 0.01
+            }
+        })
 
 
         // Head_05 & Shoulderr_029 & Shoulderl_010
-        /*
-        for (let [key, value] of this.model.parser.associations) {
-            if (key.type === 'Bone' && (key.name === 'Head_05' || key.name === 'Shoulderl_010' || key.name === 'Shoulderr_029' )) {
+        for (let [bone, value] of this.model.parser.associations) {
+            if (bone.type === 'Bone' && bone.name === 'Head_05') {
+                //bone.position.copy(new THREE.Vector3(0, 0.06, 0))
+                //bone.up.copy(new THREE.Vector3(0.5, 0.5, 0))
+                //bone.rotation.y = -1
+                //bone.rotation.x = 0
+                //bone.rotation.z = 0
+                //bone.quaternion.copy(new THREE.Quaternion(0, 0.2, 0, -1))
             }
+            /*
+            else if (bone.type === 'Bone' && bone.name === 'Shoulderl_010'){
+                bone.position.copy(convertedLandmarks[11])
+            }
+            else if (bone.type === 'Bone' && bone.name === 'Arml_011'){
+                bone.position.copy(convertedLandmarks[14])
+            }
+            else if (bone.type === 'Bone' && bone.name === 'ForeArml_012'){
+                bone.position.copy(convertedLandmarks[0])
+            }
+            else if (bone.type === 'Bone' && bone.name === 'Handl_013'){
+                bone.position.copy(convertedLandmarks[15])
+            }
+            else if (bone.type === 'Bone' && bone.name === 'Shoulderr_029'){
+                bone.position.copy(convertedLandmarks[12])
+            }
+            else if (bone.type === 'Bone' && bone.name === 'Handr_032'){
+                bone.position.copy(convertedLandmarks[16])
+            }
+            else if (bone.type === 'Bone' && bone.name === 'Armr_030'){
+                bone.position.copy(convertedLandmarks[13])
+            }*/
 
         }
-        */
+
+
+
+
+
+
 
         //this.model.scene.rotation.y += 0.01
         //console.log(this.model.scene.position.z)
