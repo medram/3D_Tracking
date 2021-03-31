@@ -13,7 +13,7 @@ import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils/drawing_
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Mouse from './mouse'
-import { Circle, Print } from './utils'
+import { Circle, getRotationBetween, Print } from './utils'
 import Skeleton from './skeleten'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
@@ -77,7 +77,7 @@ class Render3D extends React.Component
     {
         this.scene = new THREE.Scene()
         this.camera = new THREE.PerspectiveCamera(75, WIDTH / HEIGHT, 0.1, 1000)
-        this.renderer = new THREE.WebGLRenderer()
+        this.renderer = new THREE.WebGLRenderer({antialias: true})
         this.renderer.setSize(WIDTH, HEIGHT)
 
         this.scene.background = new THREE.Color(0xcccccc)
@@ -122,6 +122,13 @@ class Render3D extends React.Component
             console.error(error)
         })
 
+        /*
+        const u = new THREE.Vector3(0, 1, 0)
+        const v = new THREE.Vector3(0, 0, -1)
+        let q = getRotationBetween(u, v)
+        console.log(q)
+        console.log(new THREE.Quaternion().setFromUnitVectors(u, v))
+        */
 
         /*
         let geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -190,18 +197,23 @@ class Render3D extends React.Component
             //this.skeleton.model.rotation.y += 0.05
             //this.skeleton.model.position.x += 0.01
 
+            const Varm = convertedLandmarks[13].clone().sub(convertedLandmarks[11].clone())
 
+            this.scene.traverse((child) => {
+                //Print.try(child)
+                if (child instanceof THREE.SkinnedMesh)
+                {
+                    //Print.try(child)
+                    //const u = new THREE.Vector3(1, 0, 0).normalize()
+                    //const v = new THREE.Vector3(0, 0, 1).normalize()
+                    const u = child.skeleton.bones[12].position.clone().normalize()
+                    const v = Varm.clone()
+                    child.skeleton.bones[12].quaternion.copy(new THREE.Quaternion().setFromUnitVectors(u, v))
+                }
+            })
 
         }
 
-        this.scene.traverse((child) => {
-            //Print.try(child)
-            if (child instanceof THREE.SkinnedMesh)
-            {
-                //Print.try(child)
-                //child.skeleton.bones[6].position.y += 0.01
-            }
-        })
 
 
         // Head_05 & Shoulderr_029 & Shoulderl_010
