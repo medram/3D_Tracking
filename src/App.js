@@ -23,6 +23,10 @@ const HEIGHT = 480  // in px
 const MOUSE = new Mouse()
 
 let LANDMARKS = []
+
+let CurrentRot = null
+let CurrentRot2 = null
+
 /*
 function getSceneToWorld(dx, dy)
 {
@@ -145,13 +149,13 @@ class Render3D extends React.Component
         // create a 3D object (it should be here)
         console.log('Creating a Skeleton')
         this.skeleton = new Skeleton(LANDMARKS.poseLandmarks)
-        this.skeleton.model.translateX(1)
+        this.skeleton.model.translateX(3)
         this.skeleton.model.translateZ(1)
         this.skeleton.model.scale.set(1.5, 1.5, 1.5)
         this.scene.add(this.skeleton.model)
 
         // adding some lighting
-        const light = new THREE.AmbientLight(0xEEEEEE)
+        const light = new THREE.AmbientLight(0xFFFFFF)
         this.scene.add(light)
 
         // adding Axes to the scene
@@ -197,18 +201,69 @@ class Render3D extends React.Component
             //this.skeleton.model.rotation.y += 0.05
             //this.skeleton.model.position.x += 0.01
 
-            const Varm = convertedLandmarks[13].clone().sub(convertedLandmarks[11].clone())
+            const Varml = convertedLandmarks[13].clone().sub(convertedLandmarks[11].clone()).normalize()
+            const Vforearml = convertedLandmarks[15].clone().sub(convertedLandmarks[13].clone()).normalize()
+            const Varmr = convertedLandmarks[14].clone().sub(convertedLandmarks[12].clone()).normalize()
+            const Vforearmr = convertedLandmarks[16].clone().sub(convertedLandmarks[14].clone()).normalize()
+            const Vcholder = convertedLandmarks[11].clone().sub(convertedLandmarks[12].clone()).normalize()
 
             this.scene.traverse((child) => {
                 //Print.try(child)
-                if (child instanceof THREE.SkinnedMesh)
+                if (child.name === 'Body001_Fire_Fighter_0' && child instanceof THREE.SkinnedMesh)
                 {
                     //Print.try(child)
                     //const u = new THREE.Vector3(1, 0, 0).normalize()
                     //const v = new THREE.Vector3(0, 0, 1).normalize()
-                    const u = child.skeleton.bones[12].position.clone().normalize()
-                    const v = Varm.clone()
+                    /*
+                    if (CurrentRot == null)
+                    {
+                        CurrentRot = child.skeleton.bones[12].quaternion.clone()
+                    }*/
+
+
+                    child.skeleton.bones.forEach((bone, i) => {
+                        if (i === 12)
+                        {
+                            const u = bone.position.clone() // object UP vector
+                            const v = Varml.clone()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.copy(rot)
+                        }
+                        else if (i === 13)
+                        {
+                            const u = bone.position.clone() // object UP vector
+                            const v = Vforearml.clone()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.copy(rot)
+                        }
+                    })
+
+
+                    /*
+                    const u = child.skeleton.bones[12].up.clone().normalize()
+                    const v = Varml.clone()
                     child.skeleton.bones[12].quaternion.copy(new THREE.Quaternion().setFromUnitVectors(u, v))
+                    */
+                    /*
+                    if (CurrentRot2 == null) {
+                        CurrentRot2 = child.skeleton.bones[13].quaternion.clone()
+                    }
+                    const u2 = child.skeleton.bones[13].position.clone()
+                    const v2 = Vforearml.clone()
+                    let rot2 = new THREE.Quaternion().setFromUnitVectors(u2, v2)
+                    child.skeleton.bones[13].quaternion.copy(rot2)
+                    */
+
+
+                    /*
+                    const u3 = child.skeleton.bones[31].up.clone()
+                    const v3 = Varmr.clone()
+                    child.skeleton.bones[31].quaternion.copy(new THREE.Quaternion().setFromUnitVectors(u3, v3))
+
+                    const u4 = child.skeleton.bones[32].up.clone()
+                    const v4 = Vforearmr.clone()
+                    child.skeleton.bones[32].quaternion.copy(new THREE.Quaternion().setFromUnitVectors(u4, v4))
+                    */
                 }
             })
 
