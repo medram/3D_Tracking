@@ -56,16 +56,10 @@ export default class Skeleton
             v.z = -(v.z - this._tempLandmarks[0].z)
             */
 
-            v.x = v.x - this._reperePosition.x
-            v.y = -(v.y - this._reperePosition.y)
-            v.z = -(v.z - this._reperePosition.z)
-
-            // adding a translation to make our repere at (0, 0, 0)
-            /*
-            v.x = v.x - this._reperePosition.x
-            v.y = v.y - this._reperePosition.y
-            v.z = v.z - this._reperePosition.z
-            */
+            // make a repere and convert all points/poses to it
+            v.sub(this._reperePosition)
+            v.y = -v.y
+            v.z = -v.z // invert z to get the mirrar effect
 
             this._landmarks.push(v)
         })

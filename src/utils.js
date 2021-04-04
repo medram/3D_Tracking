@@ -55,3 +55,13 @@ export function orthogonal(v)
     let v2 = v.clone().cross(up)
     return v.clone().cross(v2).normalize()
 }
+
+export function projectOnR1(m, q) {
+    let i = new THREE.Vector3(1, 0, 0).applyQuaternion(q).normalize()
+    let j = new THREE.Vector3(0, 1, 0).applyQuaternion(q).normalize()
+    let k = new THREE.Vector3(0, 0, 1).applyQuaternion(q).normalize()
+
+    //Print.try(m.dot(i))
+
+    return new THREE.Vector3(m.clone().dot(i), m.clone().dot(j), m.clone().dot(k))
+}

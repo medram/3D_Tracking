@@ -13,7 +13,7 @@ import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils/drawing_
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Mouse from './mouse'
-import { Circle, getRotationBetween, Print } from './utils'
+import { Circle, getRotationBetween, Print, projectOnR1 } from './utils'
 import Skeleton from './skeleten'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
@@ -108,6 +108,16 @@ class Render3D extends React.Component
 
             // adding Axes to the scene
             this.model.scene.add(new THREE.AxesHelper(1))
+
+            // Adding axes helper for bones
+            for (let [key, value] of gltf.parser.associations) {
+                if (key instanceof THREE.Bone)
+                {
+                    key.add(new THREE.AxesHelper(0.13))
+                }
+            }
+
+
             // adding model to the sceen
             this.scene.add(this.model.scene)
             // adding a skeleton helper
@@ -115,11 +125,7 @@ class Render3D extends React.Component
 
 
             console.log(this.model)
-            // Shoulderl_010 & Arml_011
-            for (let [key, value] of gltf.parser.associations)
-            {
-                console.log(key)
-            }
+
 
             this.animate()
         }, undefined, error => {
@@ -207,6 +213,7 @@ class Render3D extends React.Component
             const Vforearmr = convertedLandmarks[16].clone().sub(convertedLandmarks[14].clone()).normalize()
             const Vcholder = convertedLandmarks[11].clone().sub(convertedLandmarks[12].clone()).normalize()
 
+
             this.scene.traverse((child) => {
                 //Print.try(child)
                 if (child.name === 'Body001_Fire_Fighter_0' && child instanceof THREE.SkinnedMesh)
@@ -221,20 +228,91 @@ class Render3D extends React.Component
                     }*/
 
 
+
                     child.skeleton.bones.forEach((bone, i) => {
                         if (i === 12)
                         {
-                            const u = bone.position.clone() // object UP vector
-                            const v = Varml.clone()
+                            // UP vector in R1
+                            const u = bone.up.clone()
+                            // point M should be converted to R1
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(Varml.clone(), cur).normalize()
+                            //const v = projectOnR1(Varml.clone(), bone.quaternion).normalize()
+                            //const v = bone.worldToLocal(new THREE.Vector3(0, 0, 1)).applyQuaternion(bone.quaternion).normalize()
                             const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
-                            bone.quaternion.copy(rot)
+                            bone.quaternion.multiply(rot)
+                            //bone.rotation.x = -Math.PI / 3
+
+                            //bone.lookAt(bone.worldToLocal(new THREE.Vector3(0, 1, 0)))
                         }
                         else if (i === 13)
                         {
-                            const u = bone.position.clone() // object UP vector
-                            const v = Vforearml.clone()
+                            //Print.try(Vforearml.clone())
+                            const u = bone.up.clone()
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(Vforearml.clone(), cur).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                            //const v = projectOnR1(Vforearml.clone(), bone.quaternion).normalize()
+                            //Print.try(v)
+                            //const v = projectOnR1(new THREE.Vector3(1, 0, 0), bone.quaternion).normalize()
+                            //const v = Vforearml.clone().applyQuaternion(bone.quaternion.clone()).normalize()
+                            //bone.lookAt(Vforearml)
+
+                            //bone.rotation.y += 0.01
+                            //bone.rotation.x += 0.01
+                        }
+                        else if (i === 14)
+                        {
+                            /*
+                            const u = bone.up.clone()
+                            //const v = .applyQuaternion(bone.parent.quaternion).normalize()
+                            const v = projectOnR1(new THREE.Vector3(0, 0, -1), bone.parent.quaternion).normalize()
                             const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
                             bone.quaternion.copy(rot)
+                            //bone.rotation.y += 0.01
+                            //bone.rotation.x += 0.01
+                            */
+                            const u = bone.up.clone()
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(Vforearml.clone(), cur).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                        }
+                        else if (i == 31)
+                        {
+                            /*
+                            const u = bone.up.clone()
+                            const v = projectOnR1(Varmr.clone(), bone.quaternion).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                            */
+                            //bone.lookAt(Varmr)
+                            const u = bone.up.clone()
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(Varmr.clone(), cur).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                        }
+                        else if (i == 32)
+                        {
+                            /*
+                            const u = bone.up.clone()
+                            const v = projectOnR1(Vforearmr.clone(), bone.quaternion).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                            */
+                            //bone.lookAt(Vforearmr)
+                            const u = bone.up.clone()
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(Vforearmr.clone(), cur).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
                         }
                     })
 
@@ -259,15 +337,11 @@ class Render3D extends React.Component
                     const u3 = child.skeleton.bones[31].up.clone()
                     const v3 = Varmr.clone()
                     child.skeleton.bones[31].quaternion.copy(new THREE.Quaternion().setFromUnitVectors(u3, v3))
-
-                    const u4 = child.skeleton.bones[32].up.clone()
-                    const v4 = Vforearmr.clone()
-                    child.skeleton.bones[32].quaternion.copy(new THREE.Quaternion().setFromUnitVectors(u4, v4))
                     */
                 }
             })
-
         }
+
 
 
 
