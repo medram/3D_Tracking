@@ -12,10 +12,13 @@ import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils/drawing_
 
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import Mouse from './mouse'
-import { Circle, getRotationBetween, Print, projectOnR1 } from './utils'
-import Skeleton from './skeleten'
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+
+import { Circle, getRotationBetween, Print, projectOnR1 } from './utils'
+import Mouse from './mouse'
+import Skeleton from './skeleten'
 
 
 const WIDTH = 640   // in px
@@ -79,19 +82,33 @@ class Render3D extends React.Component
 
     componentDidMount()
     {
-        this.scene = new THREE.Scene()
-        this.camera = new THREE.PerspectiveCamera(75, WIDTH / HEIGHT, 0.1, 1000)
         this.renderer = new THREE.WebGLRenderer({antialias: true})
         this.renderer.setSize(WIDTH, HEIGHT)
 
-        this.scene.background = new THREE.Color(0xcccccc)
+        this.scene = new THREE.Scene()
+        this.scene.background = new THREE.Color(0xa0a0a0)
+        //this.scene.fog = new THREE.Fog(0xa0a0a0, 3, 50)
+
+        // set up a perspective camera
+        this.camera = new THREE.PerspectiveCamera(75, WIDTH / HEIGHT, 0.1, 1000)
+
+        // adding controls
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement)
+        //this.controls.object.position.set(0.562, 4.306, 7.844)
+        //this.controls.target = new THREE.Vector3(-0.031, -0.065, -0.997)
+
+        //this.camera.position.set(-1, 2, 10)
+        this.camera.position.set(0.562, 4.306, 7.844)
+        this.camera.lookAt(-0.031, -0.065, -0.997)
+        this.controls.update()
+
+
 
         // appending Three DOM element.
         this.mount.appendChild(this.renderer.domElement)
         this.canvas = this.mount.children[0]
 
-        // adding controls
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement)
+
 
         // get mouse sceen positions (-1, +1)
         /*this.mouse = new THREE.Vector3(
@@ -100,6 +117,43 @@ class Render3D extends React.Component
             -1
         ).unproject(this.camera)*/
 
+
+        /*
+        let objLoader = new OBJLoader()
+        objLoader.load('assets/3d/maleBaseBody.obj', (obj) => {
+            console.log(obj)
+            obj.position.set(-3, 0, 0)
+            obj.scale.set(3, 3, 3)
+            obj.castShadow = true
+            obj.receiveShadow = true
+            this.scene.add(obj)
+
+        }, undefined, error => {
+            console.error(error)
+        })
+        */
+
+        let fbxLoader = new FBXLoader()
+        fbxLoader.load('assets/3d/Samba_Dancing.fbx', (fbx) => {
+            fbx.name = 'Samba_Dancing'
+            console.log(fbx)
+            fbx.position.set(-5, 0, 0)
+            fbx.scale.set(0.05, 0.05, 0.05)
+            fbx.castShadow = true
+            fbx.receiveShadow = true
+            this.scene.add(fbx)
+
+
+            this.scene.traverse((child) => {
+                if (child.name)
+                {
+                    console.log('Found it :D', child)
+                }
+            })
+
+        }, undefined, error => {
+            console.error(error)
+        })
 
         // loading modules
         let loader = new GLTFLoader()
@@ -113,6 +167,7 @@ class Render3D extends React.Component
             for (let [key, value] of gltf.parser.associations) {
                 if (key instanceof THREE.Bone)
                 {
+                    //console.log(key)
                     key.add(new THREE.AxesHelper(0.13))
                 }
             }
@@ -162,20 +217,54 @@ class Render3D extends React.Component
 
         // adding some lighting
         const light = new THREE.AmbientLight(0xFFFFFF)
-        this.scene.add(light)
+        //this.scene.add(light)
+
+        // adding a Himosphare light
+        const hemLight = new THREE.HemisphereLight(0x999999, 0x444444)
+        hemLight.position.set(0, 200, 0)
+        this.scene.add(hemLight)
+
+        // adding a Directional Light
+        const dirLight = new THREE.DirectionalLight(0xffffff)
+        dirLight.position.set(0, 200, 100)
+        dirLight.castShadow = true
+        dirLight.shadow.camera.top = 180
+        dirLight.shadow.camera.buttom = -100
+        dirLight.shadow.camera.left = -120
+        dirLight.shadow.camera.right = 120
+        this.scene.add(dirLight)
+
+        /*
+        //Set up shadow properties for the light
+        directionalLight.shadow.mapSize.width = 512; // default
+        directionalLight.shadow.mapSize.height = 512; // default
+        directionalLight.shadow.camera.near = 0.5; // default
+        directionalLight.shadow.camera.far = 500; // default
+        */
+
 
         // adding Axes to the scene
         const axesHelper = new THREE.AxesHelper(5)
         this.scene.add(axesHelper)
 
+        // adding a floor
+        const geometry = new THREE.PlaneGeometry(100, 100);
+        const material = new THREE.MeshPhongMaterial({ color: 0xffffff, depthWrite: false })
+        const floor = new THREE.Mesh(geometry, material);
+        floor.rotation.x = -Math.PI / 2
+        floor.receiveShadow = true
+        this.scene.add(floor);
+
+
         // adding a grid helper
-        const gridHelper = new THREE.GridHelper(100, 10)
+        const gridHelper = new THREE.GridHelper(100, 30, 0x000000, 0x000000)
+        gridHelper.position.y += 0.0001
+        gridHelper.material.opacity = 0.2
+        gridHelper.material.transparent = true
         this.scene.add(gridHelper)
 
+
         // Start the animation loop (all 3d models should be loaded before.)
-        this.camera.position.x = 0.3
-        this.camera.position.y = 0.3
-        this.camera.position.z = 5
         //this.animate()
     }
 
@@ -189,13 +278,10 @@ class Render3D extends React.Component
             0.5
         ).unproject(this.camera)
 
-        Print.try(this.mouse)
         */
-
-        //this.model.scene.position.x += 0.01
-        //this.model.scene.position.y = this.mouse.y
-        //this.model.scene.position.z = this.mouse.z
-
+        // Look at camera vector
+        //Print.try(new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion))
+        //Print.try(this.camera.position)
 
         if (LANDMARKS.poseLandmarks)
         {
@@ -207,14 +293,22 @@ class Render3D extends React.Component
             //this.skeleton.model.rotation.y += 0.05
             //this.skeleton.model.position.x += 0.01
 
-            const Varml = convertedLandmarks[13].clone().sub(convertedLandmarks[11].clone()).normalize()
-            const Vforearml = convertedLandmarks[15].clone().sub(convertedLandmarks[13].clone()).normalize()
-            const Varmr = convertedLandmarks[14].clone().sub(convertedLandmarks[12].clone()).normalize()
-            const Vforearmr = convertedLandmarks[16].clone().sub(convertedLandmarks[14].clone()).normalize()
-            const Vcholder = convertedLandmarks[11].clone().sub(convertedLandmarks[12].clone()).normalize()
+            const VarmL = convertedLandmarks[13].clone().sub(convertedLandmarks[11].clone()).normalize()
+            const VforearmL = convertedLandmarks[15].clone().sub(convertedLandmarks[13].clone()).normalize()
+            const VarmR = convertedLandmarks[14].clone().sub(convertedLandmarks[12].clone()).normalize()
+            const VforearmR = convertedLandmarks[16].clone().sub(convertedLandmarks[14].clone()).normalize()
+            const VShoulderL = convertedLandmarks[11].clone().sub(convertedLandmarks[12].clone()).normalize()
+            const VShoulderR = convertedLandmarks[12].clone().sub(convertedLandmarks[11].clone()).normalize()
+            const VLegR = convertedLandmarks[26].clone().sub(convertedLandmarks[24].clone()).normalize()
+            const VLegL = convertedLandmarks[25].clone().sub(convertedLandmarks[23].clone()).normalize()
+            const VForeLegR = convertedLandmarks[28].clone().sub(convertedLandmarks[26].clone()).normalize()
+            const VForeLegL = convertedLandmarks[27].clone().sub(convertedLandmarks[25].clone()).normalize()
+            const VFootL = convertedLandmarks[31].clone().sub(convertedLandmarks[27].clone()).normalize()
+            const VFootR = convertedLandmarks[32].clone().sub(convertedLandmarks[28].clone()).normalize()
 
 
             this.scene.traverse((child) => {
+                return false
                 //Print.try(child)
                 if (child.name === 'Body001_Fire_Fighter_0' && child instanceof THREE.SkinnedMesh)
                 {
@@ -230,6 +324,7 @@ class Render3D extends React.Component
 
 
                     child.skeleton.bones.forEach((bone, i) => {
+
                         if (i === 12)
                         {
                             // UP vector in R1
@@ -237,8 +332,8 @@ class Render3D extends React.Component
                             // point M should be converted to R1
                             let cur = new THREE.Quaternion()
                             bone.getWorldQuaternion(cur)
-                            const v = projectOnR1(Varml.clone(), cur).normalize()
-                            //const v = projectOnR1(Varml.clone(), bone.quaternion).normalize()
+                            const v = projectOnR1(VarmL.clone(), cur).normalize()
+                            //const v = projectOnR1(VarmL.clone(), bone.quaternion).normalize()
                             //const v = bone.worldToLocal(new THREE.Vector3(0, 0, 1)).applyQuaternion(bone.quaternion).normalize()
                             const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
                             bone.quaternion.multiply(rot)
@@ -248,21 +343,13 @@ class Render3D extends React.Component
                         }
                         else if (i === 13)
                         {
-                            //Print.try(Vforearml.clone())
+                            //Print.try(VforearmL.clone())
                             const u = bone.up.clone()
                             let cur = new THREE.Quaternion()
                             bone.getWorldQuaternion(cur)
-                            const v = projectOnR1(Vforearml.clone(), cur).normalize()
+                            const v = projectOnR1(VforearmL.clone(), cur).normalize()
                             const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
                             bone.quaternion.multiply(rot)
-                            //const v = projectOnR1(Vforearml.clone(), bone.quaternion).normalize()
-                            //Print.try(v)
-                            //const v = projectOnR1(new THREE.Vector3(1, 0, 0), bone.quaternion).normalize()
-                            //const v = Vforearml.clone().applyQuaternion(bone.quaternion.clone()).normalize()
-                            //bone.lookAt(Vforearml)
-
-                            //bone.rotation.y += 0.01
-                            //bone.rotation.x += 0.01
                         }
                         else if (i === 14)
                         {
@@ -278,66 +365,99 @@ class Render3D extends React.Component
                             const u = bone.up.clone()
                             let cur = new THREE.Quaternion()
                             bone.getWorldQuaternion(cur)
-                            const v = projectOnR1(Vforearml.clone(), cur).normalize()
+                            const v = projectOnR1(VforearmL.clone(), cur).normalize()
                             const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
                             bone.quaternion.multiply(rot)
                         }
-                        else if (i == 31)
+                        else if (i === 31)
                         {
-                            /*
-                            const u = bone.up.clone()
-                            const v = projectOnR1(Varmr.clone(), bone.quaternion).normalize()
-                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
-                            bone.quaternion.multiply(rot)
-                            */
-                            //bone.lookAt(Varmr)
                             const u = bone.up.clone()
                             let cur = new THREE.Quaternion()
                             bone.getWorldQuaternion(cur)
-                            const v = projectOnR1(Varmr.clone(), cur).normalize()
+                            const v = projectOnR1(VarmR.clone(), cur).normalize()
                             const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
                             bone.quaternion.multiply(rot)
                         }
-                        else if (i == 32)
+                        else if (i === 32)
                         {
-                            /*
-                            const u = bone.up.clone()
-                            const v = projectOnR1(Vforearmr.clone(), bone.quaternion).normalize()
-                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
-                            bone.quaternion.multiply(rot)
-                            */
-                            //bone.lookAt(Vforearmr)
                             const u = bone.up.clone()
                             let cur = new THREE.Quaternion()
                             bone.getWorldQuaternion(cur)
-                            const v = projectOnR1(Vforearmr.clone(), cur).normalize()
+                            const v = projectOnR1(VforearmR.clone(), cur).normalize()
                             const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
                             bone.quaternion.multiply(rot)
                         }
+                        else if (i === 49)
+                        {
+                            const u = bone.up.clone()
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(VLegL.clone(), cur).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                        }
+                        else if (i === 50)
+                        {
+                            const u = bone.up.clone()
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(VForeLegL.clone(), cur).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                        }
+                        else if (i === 53) {
+                            const u = bone.up.clone()
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(VLegR.clone(), cur).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                        }
+                        else if (i === 54) {
+                            const u = bone.up.clone()
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(VForeLegR.clone(), cur).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                        }
+                        // 56 / 55
+                        else if (i === 56) {
+                            const u = bone.up.clone()
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(VFootR.clone(), cur).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                        }
+                        // 52 / 51
+                        else if (i === 52) {
+                            const u = bone.up.clone()
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(VFootL.clone(), cur).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                        }
+                        else if (i === 11) {
+                            const u = bone.up.clone()
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(VShoulderL.clone(), cur).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                        }
+                        else if (i === 30) {
+                            const u = bone.up.clone()
+                            let cur = new THREE.Quaternion()
+                            bone.getWorldQuaternion(cur)
+                            const v = projectOnR1(VShoulderR.clone(), cur).normalize()
+                            const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                            bone.quaternion.multiply(rot)
+                        }
+
                     })
 
-
-                    /*
-                    const u = child.skeleton.bones[12].up.clone().normalize()
-                    const v = Varml.clone()
-                    child.skeleton.bones[12].quaternion.copy(new THREE.Quaternion().setFromUnitVectors(u, v))
-                    */
-                    /*
-                    if (CurrentRot2 == null) {
-                        CurrentRot2 = child.skeleton.bones[13].quaternion.clone()
-                    }
-                    const u2 = child.skeleton.bones[13].position.clone()
-                    const v2 = Vforearml.clone()
-                    let rot2 = new THREE.Quaternion().setFromUnitVectors(u2, v2)
-                    child.skeleton.bones[13].quaternion.copy(rot2)
-                    */
-
-
-                    /*
-                    const u3 = child.skeleton.bones[31].up.clone()
-                    const v3 = Varmr.clone()
-                    child.skeleton.bones[31].quaternion.copy(new THREE.Quaternion().setFromUnitVectors(u3, v3))
-                    */
                 }
             })
         }
@@ -390,6 +510,7 @@ class Render3D extends React.Component
         //console.log(this.model.scene.position.z)
         //this.model.scene.position.z -= 0.01
 
+        this.controls.update()
         this.renderer.render(this.scene, this.camera)
         requestAnimationFrame(this.animate)
     }

@@ -27,7 +27,7 @@ export const Print = new PrintInAnimation(1)
 export function Circle(radius = 0.01, segments = 10, color = 0xffff00)
 {
     const geometry = new THREE.CircleGeometry(radius, segments);
-    const material = new THREE.MeshBasicMaterial({ color: color });
+    const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide});
     return new THREE.Mesh(geometry, material);
 }
 
