@@ -133,6 +133,7 @@ class Render3D extends React.Component
         })
         */
 
+
         let fbxLoader = new FBXLoader()
         fbxLoader.load('assets/3d/Samba_Dancing.fbx', (fbx) => {
             fbx.name = 'Samba_Dancing'
@@ -141,15 +142,26 @@ class Render3D extends React.Component
             fbx.scale.set(0.05, 0.05, 0.05)
             fbx.castShadow = true
             fbx.receiveShadow = true
+
+            // Adding axes helper for bones
+            /*
+            fbx.children[2].skeleton.bones.forEach((bone) => {
+                    console.log(bone)
+                    bone.add(new THREE.AxesHelper(1))
+            })
+            */
+
             this.scene.add(fbx)
 
-
+            /*
             this.scene.traverse((child) => {
-                if (child.name)
+                if (child.name === 'Samba_Dancing')
                 {
-                    console.log('Found it :D', child)
+                    //bone.add(new THREE.AxesHelper(0.2))
+                    //console.log('Found it :D', child)
                 }
             })
+            */
 
         }, undefined, error => {
             console.error(error)
@@ -168,7 +180,7 @@ class Render3D extends React.Component
                 if (key instanceof THREE.Bone)
                 {
                     //console.log(key)
-                    key.add(new THREE.AxesHelper(0.13))
+                    //key.add(new THREE.AxesHelper(0.13))
                 }
             }
 
@@ -176,7 +188,7 @@ class Render3D extends React.Component
             // adding model to the sceen
             this.scene.add(this.model.scene)
             // adding a skeleton helper
-            this.scene.add(new THREE.SkeletonHelper(this.model.scene))
+            //this.scene.add(new THREE.SkeletonHelper(this.model.scene))
 
 
             console.log(this.model)
@@ -210,8 +222,9 @@ class Render3D extends React.Component
         // create a 3D object (it should be here)
         console.log('Creating a Skeleton')
         this.skeleton = new Skeleton(LANDMARKS.poseLandmarks)
-        this.skeleton.model.translateX(3)
-        this.skeleton.model.translateZ(1)
+        this.skeleton.translation.set(3, 0, 0)
+        //this.skeleton.model.translateX(3)
+        //this.skeleton.model.translateZ(1)
         this.skeleton.model.scale.set(1.5, 1.5, 1.5)
         this.scene.add(this.skeleton.model)
 
@@ -303,12 +316,30 @@ class Render3D extends React.Component
             const VLegL = convertedLandmarks[25].clone().sub(convertedLandmarks[23].clone()).normalize()
             const VForeLegR = convertedLandmarks[28].clone().sub(convertedLandmarks[26].clone()).normalize()
             const VForeLegL = convertedLandmarks[27].clone().sub(convertedLandmarks[25].clone()).normalize()
-            const VFootL = convertedLandmarks[31].clone().sub(convertedLandmarks[27].clone()).normalize()
+            const VFootL = convertedLandmarks[31].clone().sub(convertedLandmarks[29].clone()).normalize()
             const VFootR = convertedLandmarks[32].clone().sub(convertedLandmarks[28].clone()).normalize()
 
+            // translate the model by a vector
+            let A = this.skeleton.model.position.clone()
+            //Print.try(A)
+            this.model.scene.position.copy(A.sub(new THREE.Vector3(3, 0, 0)))
 
             this.scene.traverse((child) => {
-                return false
+                if (child.name === 'Samba_Dancing')
+                {
+                    let bone = child.children[2].skeleton.bones[7]
+                    /*
+                    const u = new THREE.Vector3(0, 1, 0).clone()
+                    let cur = new THREE.Quaternion()
+                    bone.getWorldQuaternion(cur)
+                    const v = projectOnR1(new THREE.Vector3(1, 0, 0), cur).normalize()
+                    const rot = new THREE.Quaternion().setFromUnitVectors(u, v)
+                    bone.quaternion.multiply(rot)
+                    */
+                    //bone.lookAt(new THREE.Vector3(0, 1, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2))
+                   //bone.rotation.z += 0.01
+                }
+
                 //Print.try(child)
                 if (child.name === 'Body001_Fire_Fighter_0' && child instanceof THREE.SkinnedMesh)
                 {
@@ -639,10 +670,19 @@ class App extends React.Component
 
     render()
     {
+        //
         return <>
-            <Render3D />
-            <canvas id='output_canvas' width={WIDTH} height={HEIGHT}></canvas>
-            <video id='video_input' width={WIDTH} height={HEIGHT}></video>
+            <table>
+                <tbody>
+                    <tr>
+                        <td><Render3D /></td>
+                        <td>
+                            <canvas id='output_canvas' width={WIDTH} height={HEIGHT}></canvas>
+                            <video id='video_input' width={WIDTH} height={HEIGHT} style={{display: 'none'}}></video>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </>
     }
 }

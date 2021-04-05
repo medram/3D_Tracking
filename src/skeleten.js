@@ -13,6 +13,7 @@ export default class Skeleton
         this.color = color
         this._bodyParts = []
         this._skeletonGenerated = false
+        this.translation = new THREE.Vector3()
 
         // these poses are used to get repere position.
         this._poses = [15, 16, 23, 24, 25, 26, 29, 30]
@@ -70,6 +71,17 @@ export default class Skeleton
         return this._landmarks
     }
 
+    _update3DModelPosition()
+    {
+        let AB = this._landmarks[11].clone().sub(this._tempLandmarks[12])
+        //Print.try(AB.length())
+        this.model.position.set(
+            this.translation.x + this._tempLandmarks[0].x * 1.2, //  * 1.2 just to scale the result
+            this.translation.y, // + 0
+            this.translation.z + AB.length() * 2 - 1
+            )
+    }
+
     // calculate repere position.
     _gererateReperePosition()
     {
@@ -77,8 +89,8 @@ export default class Skeleton
         let ymax = Math.max(...this._poses.map(i => {
             return this._tempLandmarks[i].y
         }))
+
         return this._reperePosition.set(this._tempLandmarks[0].x, ymax, this._tempLandmarks[0].z)
-        //return this.model.position.set(this._tempLandmarks[0].x, ymax, this._tempLandmarks[0].z)
     }
 
     _generateSkeleten()
@@ -262,6 +274,8 @@ export default class Skeleton
         // convert coordinates to local space
         this._convertToLocalSpace()
 
+        // update 3D model position in the world space
+        this._update3DModelPosition()
 
         // Updating body parts models
         this.model.children.forEach(bodyPart => {
